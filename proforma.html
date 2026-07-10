@@ -1,1603 +1,748 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Proforma / Cotización - Dazoru Projects</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dazoru Projects - Sistema Cotizacion Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a" id="metaTheme">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PWA -->
-  <meta name="theme-color" content="#7d644c">
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* VARIABLES GLOBALES MODIFICABLES */
+        :root { 
+            --bg-dark: #0f172a; --card-bg: #1e293b; --input-bg: #334155; 
+            --primary: #D4AF37; --text-main: #f8fafc; --text-muted: #94a3b8; 
+        }
 
-  <style>
-    :root{
-      --marron:#7d644c;
-      --beige:#e2d2b8;
-      --ink:#1b1b1b;
-      --marron-claro:#bfae9f;
-      --paper:#ffffff;
-      --bg:#0f1216;
-      --card:#151a22;
-      --line:#283042;
-      --muted:#9fb0c0;
-      --ok:#35c47a;
-      --danger:#ff5b5b;
-      --shadow: 0 10px 28px rgba(0,0,0,.25);
-      --radius:16px;
-      --a4w: 210mm;
-      --a4h: 297mm;
-      --page-margin: 10mm;
-      --doc-scale: 1;
-    }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text-main); margin: 0; padding: 20px; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        * { box-sizing: border-box; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--input-bg); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, #0b0f14, #0f1216);
-      color: #e8eef6;
-    }
+        /* ==================================================== */
+        /* LAYOUT DASHBOARD (PC VS MOBILE)                      */
+        /* ==================================================== */
+        .dashboard-layout { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1.2fr; gap: 25px; align-items: start; }
+        @media (max-width: 900px) { body { padding: 10px; } .dashboard-layout { grid-template-columns: 1fr; gap: 15px; } }
 
-    .app{
-      display:grid;
-      grid-template-columns: 420px 1fr;
-      gap:16px;
-      padding:16px;
-      max-width: 1600px;
-      margin: 0 auto;
-    }
-    @media (max-width: 1100px){
-      .app{ grid-template-columns: 1fr; }
-      .preview-wrap{ order:2; }
-      .editor{ order:1; }
-    }
+        .panel { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
+        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .app-header h1 { color: var(--primary); font-size: 24px; margin: 0; font-weight: 700; letter-spacing: 0.5px; }
+        .app-header .version { font-size: 12px; color: var(--text-muted); }
+        .icon-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-size: 20px; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); }
 
-    .editor{
-      background: var(--card);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .editor__head{
-      padding:14px 14px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .editor__head h2{
-      margin:0;
-      font-size:14px;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-      color:#dbe6f3;
-    }
-    .editor__head .mini{
-      font-size:12px;
-      color: var(--muted);
-    }
+        #btnInstall { background: var(--primary); color: #000; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 20px; border: none; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-    .tabs{
-      display:flex;
-      gap:8px;
-      padding: 10px 12px 0;
-      flex-wrap:wrap;
-    }
-    .tab{
-      border:1px solid rgba(255,255,255,.12);
-      background: transparent;
-      color:#dbe6f3;
-      border-radius: 999px;
-      padding:8px 10px;
-      font-size:12px;
-      cursor:pointer;
-    }
-    .tab[aria-selected="true"]{
-      background: rgba(226,210,184,.14);
-      border-color: rgba(226,210,184,.35);
-      color:#fff;
-    }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .input-group { width: 100%; margin-bottom: 15px; }
+        .input-group.no-margin { margin-bottom: 0; }
+        label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 500; }
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea { width: 100%; background: var(--input-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main) !important; padding: 14px 16px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; font-family: 'Poppins', sans-serif; }
+        textarea { resize: vertical; margin-bottom: 10px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15); }
+        select option { background: var(--card-bg); color: var(--text-main); }
 
-    .editor__body{
-      padding: 12px;
-      max-height: calc(100vh - 120px);
-      overflow:auto;
-    }
+        .tabs-container { display: flex; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 14px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; text-align: center; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.3s; }
+        .tabs-container input { display: none; }
+        .tabs-container input:checked + .tab-btn { background: var(--primary); color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-    .section{ display:none; }
-    .section.active{ display:block; }
+        .total-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.2)); border: 1px solid var(--primary); border-radius: 18px; padding: 25px; text-align: center; margin: 10px 0 20px 0; }
+        .total-card span { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .total-card h2 { font-size: 48px; color: var(--primary); margin: 5px 0 0 0; font-weight: 700; }
 
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .grid3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
-    @media (max-width: 520px){
-      .grid2,.grid3{ grid-template-columns: 1fr; }
-    }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; font-family: 'Poppins', sans-serif; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: #000; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .btn-secondary { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-green { background: #10b981; color: white; } 
 
-    label{
-      display:block;
-      font-size:12px;
-      color:#cfe0f2;
-      margin: 8px 0 6px;
-    }
-    input[type="text"], input[type="tel"], input[type="email"], input[type="date"], input[type="number"], textarea, select{
-      width:100%;
-      padding:10px 11px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background:#0f141d;
-      color:#e8eef6;
-      outline:none;
-    }
-    input[type="file"]{
-      width:100%;
-      padding:10px 11px;
-      border-radius: 12px;
-      border:1px dashed rgba(255,255,255,.18);
-      background:#0f141d;
-      color:#cfe0f2;
-    }
-    textarea{ min-height: 92px; resize: vertical; }
-    .hint{
-      margin-top:6px;
-      font-size:11px;
-      color: var(--muted);
-      line-height:1.35;
-    }
+        .custom-item-box { background: rgba(0,0,0,0.15); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+        .badge-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .badge-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 12px; border-left: 3px solid var(--primary); font-size: 13px; }
+        .badge-item .del-btn { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    .btns{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      padding: 12px;
-      border-top:1px solid rgba(255,255,255,.06);
-      background: rgba(0,0,0,.15);
-      position: sticky;
-      bottom:0;
-    }
-    button{
-      border:0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight:600;
-      cursor:pointer;
-      font-size:13px;
-    }
-    .btn-primary{ background: var(--ok); color:#072113; }
-    .btn-secondary{ background: rgba(226,210,184,.18); color:#fff; border:1px solid rgba(226,210,184,.25); }
-    .btn-danger{ background: rgba(255,91,91,.20); color:#fff; border:1px solid rgba(255,91,91,.35); }
-    .btn-ghost{ background: transparent; color:#dbe6f3; border:1px solid rgba(255,255,255,.14); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .section-title { font-size: 13px; color: var(--primary); text-transform: uppercase; font-weight: 700; margin: 30px 0 15px 0; letter-spacing: 1px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .color-picker-row { display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; }
+        input[type="color"] { border: none; width: 45px; height: 45px; border-radius: 8px; cursor: pointer; background: transparent; padding: 0; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
 
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:10px;
-    }
-    .row .left, .row .right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .pill{
-      font-size:11px;
-      padding:6px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      color:#dbe6f3;
-      background: rgba(255,255,255,.04);
-    }
+        /* ==================================================== */
+        /* COTIZACIÓN VIEW (PDF A4 PROFESIONAL)                 */
+        /* ==================================================== */
+        #boletaContainerWrapper { display: none; max-width: 800px; margin: 0 auto; width: 100%; }
+        #boletaView { 
+            background: white; color: black; padding: 50px 50px; position: relative; 
+            min-height: 850px; box-sizing: border-box; border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; width: 100%;
+        }
+        
+        .boleta-top-code { position: absolute; top: 30px; right: 50px; font-size: 13px; font-weight: bold; color: #333; }
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px; height: 350px; background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 0; pointer-events: none; opacity: 0.1; }
+        
+        .boleta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; position: relative; z-index: 10; border-bottom: 2px solid #eee; padding-bottom: 20px;}
+        .logo-box { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--primary); overflow: hidden; background: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .bol-info { text-align: right; }
+        .bol-info h2 { margin: 0; font-size: 20px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+        #resEmpresa { font-family: 'Great Vibes', cursive; color: var(--primary); font-size: 38px !important; font-weight: normal; line-height: 1; display: block; margin: 5px 0 10px 0; text-shadow: 0px 0px 1px rgba(0,0,0,0.1); }
+        .bol-info p { margin: 2px 0; font-size: 12px; color: #555; font-weight: 500; } 
 
-    .items{ margin-top: 6px; display:flex; flex-direction:column; gap:10px; }
-    .item{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding: 10px;
-      background: #0f141d;
-    }
-    .item__head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:6px;
-    }
-    .item__head .title{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .item__head .title strong{ font-size:13px; }
-    .item__head .actions{ display:flex; gap:8px; }
-    .mini-btn{
-      padding:8px 10px;
-      border-radius: 10px;
-      font-size:12px;
-      font-weight:700;
-      border:1px solid rgba(255,255,255,.12);
-      background: transparent;
-      color:#dbe6f3;
-    }
-    .mini-btn.del{ border-color: rgba(255,91,91,.45); color:#ffd0d0; }
+        .client-section { margin-bottom: 25px; position: relative; z-index: 10; color: #333; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .client-section h3 { grid-column: span 2; font-size: 14px; border-bottom: 1px solid #ddd; display: block; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 4px; font-weight: 700; color: var(--primary); }
+        .client-section p { margin: 0; font-size: 12px; }
+        
+        .install-banner { background: #fffde7; border-left: 5px solid var(--primary); padding: 12px 15px; margin: 20px 0; font-size: 13px; font-weight: bold; position: relative; z-index: 10; display: none; color: #8a6d3b; border-radius: 4px; }
 
-    .check{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:12px;
-      color:#dbe6f3;
-      user-select:none;
-    }
-    .check input{ width:18px; height:18px; }
+        #boletaView table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 25px 0; position: relative; z-index: 10; color: black; }
+        #boletaView th { background: #f9f9f9; border-top: 2px solid #333; border-bottom: 2px solid #333; padding: 12px 10px; text-align: left; text-transform: uppercase; font-size: 11px; }
+        #boletaView td { padding: 12px 10px; border-bottom: 1px solid #eee; }
+        .text-right { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        
+        .summary-section { margin-left: auto; width: 45%; font-size: 13px; position: relative; z-index: 10; color: black; }
+        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; }
+        .summary-total { font-weight: bold; font-size: 18px; border-top: 2px solid #333; padding-top: 10px; margin-top: 5px; color: var(--primary); }
+        
+        /* FOOTER DE TEXTOS Y MEDIOS DE PAGO */
+        .terms { clear: both; padding-top: 20px; font-size: 10px; color: #777; text-align: justify; position: relative; z-index: 10; border-top: 1px solid #eee; margin-top: 40px; line-height: 1.5; }
+        
+        #paymentFooter { margin-top: 20px; padding-top: 15px; text-align: center; position: relative; z-index: 10; display: block; }
+        .pay-title { font-size: 11px; color: #555; text-transform: uppercase; font-weight: bold; margin-bottom: 12px; display: block; letter-spacing: 1px; }
+        .pay-badges-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        
+        .badge-pay { padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 11px; color: white; display: inline-flex; align-items: center; letter-spacing: 0.5px; }
+        .b-yape { background: #742384; } 
+        .b-plin { background: #00E4B7; color: #00363A; } 
+        .b-bcp { background: #FF7800; color: #002A8D; } 
+        .b-bbva { background: #004481; } 
+        .b-interbank { background: #00A499; } 
+        .b-tarjeta { background: #1A1F71; } 
+        .b-efectivo { background: #27AE60; } 
 
-    .cond-list{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
-    .cond{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding:10px;
-      background:#0f141d;
-    }
-    .cond__head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .cond__head strong{ font-size:13px; }
+        .web-footer { text-align: center; font-size: 11.5px; font-weight: bold; color: var(--primary); padding-top: 15px; border-top: 1px dashed #eee; display: none; }
+        .web-footer span { color: #333; margin-left: 5px; }
 
-    /* ===== Preview ===== */
-    .preview-wrap{
-      background: rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:auto;
-      padding:16px;
-    }
-    .preview-meta{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-      color: var(--muted);
-      font-size:12px;
-    }
-    .zoom{ display:flex; align-items:center; gap:10px; }
-    .zoom input[type="range"]{ width:180px; }
+        .hidden { display: none !important; }
 
-    /* ===== Document A4 ===== */
-    .doc{
-      transform-origin: top left;
-      transform: scale(var(--doc-scale));
-      width: var(--a4w);
-      margin: 0 auto;
-    }
-    .page{
-      width: var(--a4w);
-      height: var(--a4h);
-      background: var(--paper);
-      color: var(--ink);
-      box-shadow: 0 18px 40px rgba(0,0,0,.22);
-      position: relative;
-      overflow:hidden;
-      margin: 0 auto 16px;
-      page-break-after: always;
-    }
-    .page:last-child{ page-break-after: auto; }
+        @media print {
+            @page { margin: 0; size: A4 portrait; }
+            body { background: white !important; margin: 0; padding: 0; }
+            .dashboard-layout, #configModal, .form-grid button { display: none !important; }
+            #boletaContainerWrapper { max-width: 100%; display: block; margin: 0; padding: 0; }
+            #boletaView { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 1.5cm 2cm; margin: 0; min-height: 100vh; position: static; border: none; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
 
-    .page-inner{
-      position:absolute;
-      inset: var(--page-margin);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+        @media only screen and (max-width: 600px) {
+            #boletaView { padding: 25px 15px; min-height: auto; }
+            .boleta-top-code { right: 15px; top: 15px; }
+            .logo-box { width: 60px; height: 60px; }
+            #resEmpresa { font-size: 28px !important; }
+            .bol-info h2 { font-size: 15px; }
+            .client-section { grid-template-columns: 1fr; }
+            .summary-section { width: 100%; }
+        }
 
-    .topbar{
-      background: var(--marron);
-      color: #fff;
-      border-radius: 10px;
-      padding: 10px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .brand{ display:flex; align-items:center; gap:10px; min-width: 0; }
-    .logo{
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.16);
-      display:flex; align-items:center; justify-content:center;
-      overflow:hidden; flex: 0 0 auto;
-    }
-    .logo img{ width:100%; height:100%; object-fit: contain; background: transparent; }
-    .brand-text{ min-width:0; display:flex; flex-direction:column; line-height:1.1; }
-    .brand-text .name{
-      font-weight:800; letter-spacing:.2px; font-size: 14px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 280px;
-    }
-    .brand-text .sub{
-      font-size: 11px; opacity: .92;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 280px;
-    }
-    .topbar-right{ text-align:right; line-height:1.15; flex:0 0 auto; }
-    .topbar-right .tag{ font-weight:800; font-size: 12px; letter-spacing:.2px; white-space:nowrap; }
-    .topbar-right .num{ font-size: 11px; opacity:.95; white-space:nowrap; }
+        /* ===== MEJORAS DE INTERACTIVIDAD (hover/dinámica) ===== */
+        .btn, .tab-btn, .badge-item, .badge-item .del-btn, .icon-btn, .color-picker-row {
+            transition: all 0.25s ease;
+        }
 
-    .title{
-      text-align:center;
-      font-weight:900;
-      color: #1a1a1a;
-      font-size: 18px;
-      letter-spacing:.4px;
-      margin-top: 4px;
-    }
-    .subtitle{
-      text-align:center;
-      font-size: 12px;
-      color: #3a3a3a;
-      margin-top:-6px;
-    }
+        .btn:hover { filter: brightness(1.12); transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.35); }
+        .btn:active { transform: translateY(0) scale(0.97); filter: brightness(0.95); }
 
-    .two-col{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+        .tab-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-main); }
+        .tabs-container input:checked + .tab-btn:hover { filter: brightness(1.1); }
 
-    .box{ border:1px solid rgba(125,100,76,.35); border-radius: 12px; padding: 10px 10px 8px; }
-    .box h3{
-      margin:0 0 6px;
-      font-size: 12px;
-      color: var(--marron);
-      letter-spacing:.3px;
-      text-transform: uppercase;
-    }
-    .kv{ display:grid; grid-template-columns: 130px 1fr; gap:6px 10px; font-size: 12px; }
-    .kv .k{ color:#5a5a5a; font-weight:700; }
-    .kv .v{ color:#1b1b1b; }
+        .badge-item:hover { background: rgba(255,255,255,0.08); border-left-width: 5px; }
+        .badge-item .del-btn:hover { background: #ef4444; color: white; transform: scale(1.15) rotate(90deg); }
 
-    /* Datos cliente vertical */
-    .kv-client{
-      display:grid;
-      grid-template-columns: 130px 1fr;
-      gap:6px 10px;
-      font-size:12px;
-    }
-    .kv-client .k{ color:#5a5a5a; font-weight:800; }
-    .kv-client .v{
-      color:#1b1b1b;
-      white-space: normal;
-      overflow-wrap:anywhere;
-      word-break: normal;
-      hyphens:auto;
-      line-height:1.25;
-    }
+        .icon-btn:hover { transform: rotate(15deg) scale(1.05); }
 
-    .proposal{
-      border:1px solid rgba(125,100,76,.35);
-      border-radius: 12px;
-      padding:10px;
-      font-size:12px;
-    }
-    .proposal .head{
-      font-weight:900;
-      color: var(--marron);
-      text-transform: uppercase;
-      letter-spacing:.3px;
-      margin-bottom:6px;
-      font-size:12px;
-    }
-    .proposal .text{ white-space: pre-wrap; color:#1b1b1b; line-height:1.35; min-height: 28px; }
+        .color-picker-row:hover { background: var(--card-bg); }
 
-    table{ width:100%; border-collapse: collapse; font-size: 11.5px; }
-    th, td{ border: 1px solid rgba(125,100,76,.28); padding: 8px 8px; vertical-align: top; }
-    th{
-      background: var(--beige);
-      color: #2a2017;
-      font-weight:900;
-      text-transform: uppercase;
-      letter-spacing:.25px;
-      font-size: 11px;
-    }
-    .price{ text-align:right; white-space:nowrap; font-weight:800; }
-    .muted{ color:#666; }
-    .spec-ul{ margin:0; padding-left: 16px; }
-    .spec-ul li{ margin: 0 0 2px; }
-    .spec-p{ margin:0; white-space: pre-wrap; }
+        .btn-whatsapp { background: #25D366; color: white; }
+        .btn-whatsapp:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.35); }
 
-    .totals{ display:flex; justify-content:flex-end; margin-top: 6px; }
-    .totals-card{
-      width: 280px;
-      border:1px solid rgba(125,100,76,.35);
-      border-radius: 12px;
-      overflow:hidden;
-    }
-    .totals-card .row{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding: 8px 10px;
-      border-bottom:1px solid rgba(125,100,76,.22);
-      font-size:12px;
-      margin-top:0;
-    }
-    .totals-card .row:last-child{ border-bottom:0; }
-    .totals-card .row .k{ font-weight:800; color:#3b3b3b; }
-    .totals-card .row .v{ font-weight:900; }
-    .totals-card .grand{ background: var(--marron); color:#fff; }
-    .totals-card .grand .k, .totals-card .grand .v{ color:#fff; }
-
-    .footer{
-      margin-top:auto;
-      border-top: 1px solid rgba(125,100,76,.28);
-      padding-top: 8px;
-      display:flex;
-      justify-content:flex-start; /* ✅ ya no hay "Página 1/2" */
-      gap:10px;
-      font-size: 10.5px;
-      color:#3d3d3d;
-    }
-    .footer .left{ display:flex; flex-wrap:wrap; gap:8px 12px; }
-    .foot-pill{ display:inline-flex; gap:6px; align-items:center; }
-    .dot{ width:4px; height:4px; border-radius:99px; background: rgba(125,100,76,.8); display:inline-block; }
-
-    /* ===== Page 2 style ===== */
-    .h2-title{
-      font-weight:900;
-      color:#6a5746;
-      font-size:13px;
-      letter-spacing:.2px;
-      margin: 8px 0 6px;
-    }
-    .detail-text{
-      font-size:11.5px;
-      line-height:1.42;
-      white-space:pre-wrap;
-      color:#2b2b2b;
-    }
-
-    .accept-title{
-      font-weight:900;
-      color:#6a5746;
-      margin: 10px 0 6px;
-      font-size:12px;
-    }
-    .accept-text{
-      font-size:11.5px;
-      line-height:1.42;
-      white-space:pre-wrap;
-      color:#2b2b2b;
-      margin-bottom:8px;
-    }
-
-    .sign2-table td{
-      height: 38px;
-      vertical-align: middle;
-      font-size: 11px;
-    }
-    .sign2-table td .line{
-      display:inline-block;
-      min-width: 120px;
-      border-bottom: 1px solid rgba(0,0,0,.55);
-      transform: translateY(-2px);
-    }
-
-    .watermark{
-      position:absolute;
-      inset: 58mm 10mm 52mm 10mm;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      pointer-events:none;
-      opacity: .10;
-      z-index: 0;
-    }
-    .watermark img{
-      width: 120mm;
-      height: 120mm;
-      object-fit: contain;
-      filter: grayscale(100%);
-    }
-    .page2-content{ position:relative; z-index:1; }
-
-    @media screen and (max-width: 720px){
-      .two-col{ grid-template-columns: 1fr; }
-    }
-
-    /* ===== Print ===== */
-    @page{ size: A4; margin: 0; }
-    @media print{
-      html,body{ background:#fff !important; }
-      .editor, .preview-meta{ display:none !important; }
-      .preview-wrap{
-        border:0 !important;
-        padding:0 !important;
-        box-shadow:none !important;
-        background:#fff !important;
-      }
-      .app{ display:block; padding:0; max-width:none; }
-      .doc{ transform:none !important; width: var(--a4w) !important; }
-      .page{ box-shadow:none !important; margin:0 !important; page-break-after: always; }
-      .page-inner{ inset: var(--page-margin) !important; }
-      *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
-  </style>
+        .total-card h2 { transition: transform 0.2s ease; }
+    </style>
 </head>
-
 <body>
-  <div class="app">
 
-    <!-- EDITOR -->
-    <aside class="editor" id="editor">
-      <div class="editor__head">
-        <div>
-          <h2>Editor de Cotización</h2>
-          <div class="mini">No sale en el PDF • Guarda en el teléfono/PC</div>
+<!-- DASHBOARD VIEW -->
+<div class="dashboard-layout" id="calcView">
+    
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="panel">
+        <div class="app-header">
+            <div>
+                <h1>Dazoru Projects</h1>
+                <span class="version">Sistema Cotizacion PRO</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnInstall" onclick="installPWA()">📲 Instalar</button>
+                <button class="icon-btn" onclick="toggleConfig()">⚙️</button>
+            </div>
         </div>
-        <span class="pill" id="statusPill">Listo</span>
-      </div>
 
-      <div class="tabs" role="tablist" aria-label="Secciones">
-        <button class="tab" role="tab" aria-selected="true" data-tab="empresa">Empresa</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="cotizacion">Cotización</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="items">Ítems</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="pagina2">Página 2</button>
-      </div>
-
-      <div class="editor__body">
-        <!-- EMPRESA -->
-        <section class="section active" id="tab-empresa">
-          <label>Nombre de empresa</label>
-          <input id="in_companyName" type="text" />
-
-          <div class="grid2">
-            <div>
-              <label>RUC</label>
-              <input id="in_ruc" type="text" />
-            </div>
-            <div>
-              <label>Dirección</label>
-              <input id="in_address" type="text" />
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label>WhatsApp</label>
-              <input id="in_whatsapp" type="text" />
-            </div>
-            <div>
-              <label>Teléfono</label>
-              <input id="in_phone" type="text" />
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label>Correo</label>
-              <input id="in_email" type="email" />
-            </div>
-            <div>
-              <label>Logo (PNG/JPG)</label>
-              <input id="in_logo" type="file" accept="image/png,image/jpeg" />
-              <div class="hint">Se guarda dentro del navegador (localStorage) como imagen embebida.</div>
-            </div>
-          </div>
-
-          <label class="check" style="margin-top:12px;">
-            <input type="checkbox" id="in_showRucFooter" />
-            Mostrar RUC en el pie de página
-          </label>
-          <div class="hint">Si lo desactivas, el pie no mostrará el RUC (en ambas páginas).</div>
-
-          <label class="check" style="margin-top:10px;">
-            <input type="checkbox" id="in_showWatermark" />
-            Mostrar marca de agua en Página 2
-          </label>
-          <div class="hint">Usa el mismo logo cargado, en forma tenue (como tu ejemplo).</div>
-
-          <div class="row">
-            <div class="left">
-              <span class="pill">Colores: #7d644c / #e2d2b8</span>
-              <span class="pill">A4 • 2 páginas</span>
-              <span class="pill">Instalable como App (PWA)</span>
-            </div>
-          </div>
-
-          <div class="hint" style="margin-top:10px">
-            <b>Android/Chrome:</b> “Descargar PDF” abre la impresión. Elige <b>Guardar como PDF</b> y desactiva <b>Encabezados y pies</b> del navegador si aparece.
-          </div>
-        </section>
-
-        <!-- COTIZACION -->
-        <section class="section" id="tab-cotizacion">
-          <label>Título principal (sale arriba en grande)</label>
-          <input id="in_titleOverride" type="text" />
-          <div class="hint">Ejemplo: HOJA DE COTIZACIÓN - PROYECTO: MUEBLE DE BAÑO MODERNO (MIRAFLORES)</div>
-
-          <div class="grid2" style="margin-top:8px;">
-            <div>
-              <label>N° de cotización</label>
-              <input id="in_quoteNo" type="text" />
-            </div>
-            <div>
-              <label>Fecha</label>
-              <input id="in_date" type="date" />
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label>Cliente</label>
-              <input id="in_client" type="text" />
-            </div>
-            <div>
-              <label>Proyecto / Dirección (dato del cuadro cliente)</label>
-              <input id="in_project" type="text" />
-            </div>
-          </div>
-
-          <label>Resumen de la propuesta (texto libre)</label>
-          <textarea id="in_summary"></textarea>
-
-          <div class="grid2" style="margin-top:8px;">
-            <div>
-              <label>Descuento tipo</label>
-              <select id="in_discType">
-                <option value="PEN">S/ (monto)</option>
-                <option value="PCT">%</option>
-              </select>
-            </div>
-            <div>
-              <label>Descuento valor</label>
-              <input id="in_discValue" type="number" step="0.01" min="0" />
-              <div class="hint">Si es 0, no se mostrará la línea de descuento.</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ITEMS -->
-        <section class="section" id="tab-items">
-          <div class="row">
-            <div class="left">
-              <button class="btn-secondary" id="btnAddItem" type="button">+ Agregar ítem</button>
-              <span class="pill" id="itemsCount">0 ítems</span>
-            </div>
-          </div>
-          <div class="items" id="itemsEditor"></div>
-          <div class="hint" style="margin-top:10px">
-            <b>Especificaciones:</b> varias líneas = bullets (•). Una línea = texto normal.
-          </div>
-        </section>
-
-        <!-- PAGINA 2 -->
-        <section class="section" id="tab-pagina2">
-          <label>Especificaciones técnicas detalladas (texto libre)</label>
-          <textarea id="in_detailSpecs" style="min-height:160px;"></textarea>
-          <div class="hint">Puedes escribir con 1) 2) 3) y bullets con “•” tal como tu ejemplo.</div>
-
-          <div class="row">
-            <div class="left">
-              <button class="btn-secondary" id="btnAddCond" type="button">+ Agregar condición</button>
-              <span class="pill" id="condsCount">0 condiciones</span>
-            </div>
-          </div>
-
-          <div class="cond-list" id="condsEditor"></div>
-
-          <label style="margin-top:14px;">Texto “Aceptación de la cotización”</label>
-          <textarea id="in_acceptText" style="min-height:90px;"></textarea>
-
-          <div class="grid2">
-            <div>
-              <label>Firma - Cliente (nombre/cargo)</label>
-              <input id="in_signClient" type="text" />
-            </div>
-            <div>
-              <label>Firma - Empresa (nombre/cargo)</label>
-              <input id="in_signCompany" type="text" />
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label>DNI (cliente)</label>
-              <input id="in_dni" type="text" />
-            </div>
-            <div>
-              <label>Fecha firma (opcional)</label>
-              <input id="in_signDate" type="text" placeholder="__/__/20__" />
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div class="btns">
-        <button class="btn-primary" id="btnSave" type="button">Guardar</button>
-        <button class="btn-ghost" id="btnReset" type="button">Reset</button>
-        <button class="btn-secondary" id="btnPDF" type="button">Descargar PDF</button>
-      </div>
-    </aside>
-
-    <!-- PREVIEW -->
-    <main class="preview-wrap">
-      <div class="preview-meta">
-        <div>Vista previa A4 (2 páginas) • Listo para imprimir/Guardar como PDF</div>
-        <div class="zoom">
-          <span>Zoom</span>
-          <input id="zoomRange" type="range" min="0.72" max="1.20" step="0.02" value="0.92" />
-          <span class="pill" id="zoomLabel">92%</span>
+        <div class="tabs-container">
+            <input type="radio" name="tipoTrabajo" id="tabEspejos" value="espejos" checked onchange="switchTipo(this.value)">
+            <label for="tabEspejos" class="tab-btn">💎 Calculadora Espejos</label>
+            <input type="radio" name="tipoTrabajo" id="tabOtros" value="otros" onchange="switchTipo(this.value)">
+            <label for="tabOtros" class="tab-btn">🔨 Melamina y Otros</label>
         </div>
-      </div>
 
-      <div class="doc" id="doc">
-        <!-- PAGE 1 -->
-        <section class="page" aria-label="Página 1">
-          <div class="page-inner">
+        <div id="wrapperEspejos">
+            <div class="tabs-container" style="background: rgba(255,255,255,0.05); margin-bottom: 20px; padding: 4px;">
+                <input type="radio" name="forma" id="rect" value="rect" checked onchange="calc()">
+                <label for="rect" class="tab-btn" style="padding: 10px;">⬜ Rectangular</label>
+                <input type="radio" name="forma" id="circ" value="circ" onchange="calc()">
+                <label for="circ" class="tab-btn" style="padding: 10px;">⚪ Circular</label>
+            </div>
 
-            <div class="topbar">
-              <div class="brand">
-                <div class="logo"><img id="pv_logo1" alt="logo" /></div>
-                <div class="brand-text">
-                  <div class="name" id="pv_companyName1">Dazoru Projects</div>
-                  <div class="sub" id="pv_companySub1">Decoración • Melamina • Espejos</div>
+            <div class="form-grid">
+                <div class="input-group no-margin"><label>Ancho (cm)</label><input type="number" id="ancho" placeholder="0" oninput="calc()"></div>
+                <div class="input-group no-margin" id="colAlto"><label>Alto (cm)</label><input type="number" id="alto" placeholder="0" oninput="calc()"></div>
+                <div class="input-group no-margin"><label>Cantidad</label><input type="number" id="cantidad" value="1" oninput="calc()" style="text-align:center;"></div>
+            </div>
+
+            <div class="input-group">
+                <label>💎 Material de Vidrio/Espejo</label>
+                <select id="material" onchange="calc()">
+                    <option value="3mm_marco">Espejo 3mm con Marco</option>
+                    <option value="3mm">Espejo 3mm Solo</option>
+                    <option value="4mm">Espejo 4mm Normal</option>
+                    <option value="opti">Espejo 4mm Optimirror</option>
+                </select>
+            </div>
+
+            <div id="finishGroup" class="input-group">
+                <label>✨ Acabado de Bordes</label>
+                <div class="tabs-container" style="background: rgba(255,255,255,0.05); padding: 4px; margin:0;">
+                    <input type="radio" name="acabado" id="pul" value="pul" checked onchange="calc()">
+                    <label for="pul" class="tab-btn" style="padding: 10px;">Pulido</label>
+                    <input type="radio" name="acabado" id="bis1" value="bis1" onchange="calc()">
+                    <label for="bis1" class="tab-btn" style="padding: 10px;">Bisel 1cm</label>
+                    <input type="radio" name="acabado" id="bis2" value="bis2" onchange="calc()">
+                    <label for="bis2" class="tab-btn" style="padding: 10px;">Bisel 2cm</label>
                 </div>
-              </div>
-              <div class="topbar-right">
-                <div class="tag">Cotización | <span id="pv_quoteNoTop">DP-0001</span></div>
-                <div class="num">Fecha: <span id="pv_dateTop">2026-02-10</span></div>
-              </div>
             </div>
 
-            <div class="title" id="pv_title">HOJA DE COTIZACIÓN - PROYECTO: ...</div>
-            <div class="subtitle">Propuesta económica y técnica para ejecución del proyecto</div>
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="input-group no-margin"><label>💨 Arenado</label><select id="arenado" onchange="calc()"><option value="no">No</option><option value="si">Sí</option></select></div>
+                <div class="input-group no-margin"><label>💡 Sistema LED</label><select id="led" onchange="calc()"><option value="no">No</option><option value="1">1 Tono</option><option value="3">3 Tonos</option></select></div>
+            </div>
 
-            <div class="two-col">
-              <div class="box">
-                <h3>Datos del Cliente</h3>
+            <div style="background: rgba(212,175,55,0.1); padding: 15px; border-radius: 12px; display: flex; align-items: center; margin-top: 15px;">
+                <input type="checkbox" id="segCheck" onchange="calc()" style="width:20px; height:20px; margin-right:12px; accent-color: var(--primary);">
+                <label id="lblSeguridad" style="margin:0; font-size: 13px; color: var(--text-main);">Aplicar Lámina de Seguridad</label>
+            </div>
+        </div>
 
-                <div class="kv-client">
-                  <div class="k">Cliente</div><div class="v" id="pv_client">—</div>
-                  <div class="k">Proyecto</div><div class="v" id="pv_project">—</div>
-                  <div class="k">Cotización</div><div class="v" id="pv_quoteNo">—</div>
-                  <div class="k">Fecha</div><div class="v" id="pv_date">—</div>
+        <div id="wrapperOtros" class="hidden">
+            <div class="custom-item-box">
+                <div class="input-group"><label>🛠️ Descripción del Producto / Trabajo</label><input type="text" id="customDesc" placeholder="Ej: Repisa Flotante Melamina Pelikano"></div>
+                <div class="form-grid" style="margin-bottom: 0;">
+                    <div class="input-group no-margin"><label>Cantidad</label><input type="number" id="customCant" value="1" min="1" style="text-align:center;"></div>
+                    <div class="input-group no-margin"><label>Precio Unitario (S/)</label><input type="number" id="customPrecio" placeholder="0.00"></div>
                 </div>
-              </div>
+                <button class="btn btn-primary" onclick="agregarItemCustom()" style="padding: 12px; font-size:14px; margin-top:15px;">➕ Agregar a la Cotización</button>
+            </div>
+            <label>📋 Items Agregados:</label>
+            <div class="badge-list" id="listaItemsCustom"><p style="color: var(--text-muted); text-align: center; font-size:13px; margin: 30px 0;">La lista de trabajos está vacía.</p></div>
+        </div>
+    </div>
 
-              <div class="box">
-                <h3>Datos de la Empresa</h3>
-                <div class="kv">
-                  <div class="k">Empresa</div><div class="v" id="pv_companyName2">Dazoru Projects</div>
-                  <div class="k">RUC</div><div class="v" id="pv_ruc">00000000000</div>
-                  <div class="k">Dirección</div><div class="v" id="pv_address">Lima, Perú</div>
-                  <div class="k">Número</div><div class="v" id="pv_phoneLine">—</div>
-                  <div class="k">Correo</div><div class="v" id="pv_emailLine">—</div>
+    <!-- COLUMNA DERECHA -->
+    <div class="panel">
+        <label style="font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 15px; display: block;">👤 Datos del Cliente</label>
+        <div class="input-group"><input type="text" id="cliente" placeholder="Nombre completo del cliente"></div>
+        <div class="input-group"><input type="text" id="telCliente" placeholder="Número de Celular (Ej: 999888777)"></div>
+        <div class="input-group"><input type="text" id="dirCliente" placeholder="Dirección exacta de instalación"></div>
+        
+        <div class="form-grid" style="margin-bottom: 25px;">
+            <div class="input-group no-margin"><label>📅 Fecha de Instal.</label><input type="date" id="fechaInstalManual"></div>
+            <div class="input-group no-margin"><label>⏰ Hora</label><input type="time" id="horaInstalManual"></div>
+        </div>
+
+        <label style="font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 15px; display: block;">📦 Logística y Descuentos</label>
+        <div class="form-grid">
+            <div class="input-group no-margin"><label>Envío (S/)</label><input type="number" id="envio" value="0" oninput="calc()"></div>
+            <div class="input-group no-margin"><label>Instal. (S/)</label><input type="number" id="instal" value="0" oninput="calc()"></div>
+            <div class="input-group no-margin"><label>Dscto. (S/)</label><input type="number" id="descuento" value="0" oninput="calc()"></div>
+        </div>
+
+        <label style="font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 15px; margin-top: 15px; display: block;">💳 Método de Pago del Cliente</label>
+        <div class="input-group">
+            <select id="metodoPago">
+                <option value="A Convenir">A Convenir</option>
+                <option value="Yape">Yape</option>
+                <option value="Plin">Plin</option>
+                <option value="Transferencia BCP">Transferencia BCP</option>
+                <option value="Transferencia BBVA">Transferencia BBVA</option>
+                <option value="Transferencia Interbank">Transferencia Interbank</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+            </select>
+        </div>
+
+        <div class="total-card"><span>Total Final a Cobrar</span><h2 id="totalDisp">S/ 0.00</h2></div>
+
+        <button class="btn btn-primary" onclick="generarBoleta()">📄 Generar Cotización</button>
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Limpiar Todo</button>
+    </div>
+</div>
+
+<!-- MODAL FLOTANTE DE CONFIGURACIÓN -->
+<div id="configModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="app-header" style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+            <h2 style="color: var(--primary); margin:0;">⚙️ Ajustes del Sistema</h2>
+            <button class="icon-btn" onclick="toggleConfig()">❌</button>
+        </div>
+        <div class="dashboard-layout" style="grid-template-columns: 1fr 1fr; gap: 20px; display: grid;">
+            <div>
+                <div class="section-title" style="margin-top:0;">🎨 Tema y Colores</div>
+                <div class="color-picker-row"><label style="margin:0; font-size:13px; color:var(--text-main);">Fondo del Sistema:</label><input type="color" id="themeBg" value="#0f172a" onchange="updateTheme()"></div>
+                <div class="color-picker-row"><label style="margin:0; font-size:13px; color:var(--text-main);">Color Acento (Botones):</label><input type="color" id="themePrimary" value="#D4AF37" onchange="updateTheme()"></div>
+                
+                <div class="section-title">🏢 Empresa y Cotización</div>
+                <div class="input-group"><input type="text" id="configEmpresa" placeholder="Nombre Negocio" oninput="saveConf()"></div>
+                <div class="input-group"><input type="text" id="configCelulares" placeholder="Celulares" oninput="saveConf()"></div>
+                <div class="input-group"><input type="text" id="configEmail" placeholder="Correo" oninput="saveConf()"></div>
+                
+                <label style="font-size:11px;">Logo de tu Empresa:</label>
+                <input type="file" id="logoInput" accept="image/*" onchange="handleLogo(event)" style="background:var(--input-bg); color:var(--text-main); padding:10px; border-radius:10px; width:100%; margin-bottom:10px;">
+                <label>Opacidad Marca de Agua Documento:</label><input type="range" id="opacityRange" min="0" max="0.5" step="0.05" value="0.1" oninput="updateOpacity(this.value)" style="width:100%;">
+
+                <div class="section-title">💳 Logos de Pago (Pie de Cotización)</div>
+                <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Sube una imagen con los logos o QRs. Si no subes nada, se usarán los botones por defecto.</p>
+                <input type="file" id="payLogoInput" accept="image/*" onchange="handlePayLogo(event)" style="background:var(--input-bg); color:var(--text-main); padding:10px; border-radius:10px; width:100%; margin-bottom:10px;">
+                <button class="btn btn-secondary" onclick="removePayLogo()" style="padding: 10px; font-size: 13px;">🗑️ Quitar imagen y usar defecto</button>
+            </div>
+            
+            <div>
+                <div class="section-title" style="margin-top:0;">📝 Textos Adicionales</div>
+                <div class="input-group">
+                    <label>Términos y Condiciones (Editables):</label>
+                    <textarea id="configTerminos" rows="4" oninput="saveConf()" placeholder="Tus términos aquí..."></textarea>
                 </div>
-              </div>
-            </div>
-
-            <div class="proposal">
-              <div class="head">Resumen de la propuesta</div>
-              <div class="text" id="pv_summary"></div>
-            </div>
-
-            <div class="box" style="padding:0; overflow:hidden;">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:13%;">Ambiente</th>
-                    <th style="width:18%;">Producto</th>
-                    <th style="width:34%;">Especificaciones</th>
-                    <th style="width:23%;">Detalle</th>
-                    <th style="width:12%; text-align:right;">Precio</th>
-                  </tr>
-                </thead>
-                <tbody id="pv_itemsBody"></tbody>
-              </table>
-            </div>
-
-            <div class="totals">
-              <div class="totals-card">
-                <div class="row">
-                  <div class="k">Subtotal</div>
-                  <div class="v" id="pv_subtotal">S/ 0.00</div>
+                <div class="input-group">
+                    <label>Tu Página Web o Portafolio:</label>
+                    <input type="text" id="configWeb" placeholder="Ej: www.dazoruprojects.com" oninput="saveConf()">
                 </div>
-                <div class="row" id="pv_discountRow" style="display:none;">
-                  <div class="k">Descuento</div>
-                  <div class="v" id="pv_discount">- S/ 0.00</div>
+
+                <div class="section-title">💰 Base de Precios Espejos (S/)</div>
+                <div class="form-grid">
+                    <div class="input-group no-margin"><label>3mm c/Marco</label><input type="number" id="p_3mm_marco" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>3mm Solo</label><input type="number" id="p_3mm" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>4mm Normal</label><input type="number" id="p_4mm" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Optimirror</label><input type="number" id="p_opti" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Pulido (ml)</label><input type="number" id="p_pul" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Bisel 1cm (ml)</label><input type="number" id="p_bis1" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Bisel 2cm (ml)</label><input type="number" id="p_bis2" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Lám. Seg. (m2)</label><input type="number" id="p_seg" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>LED 1 Tono</label><input type="number" id="p_led1" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>LED 3 Tonos</label><input type="number" id="p_led3" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Arenado Base</label><input type="number" id="p_arenado_base" oninput="savePrices()"></div>
+                    <div class="input-group no-margin"><label>Arenado (m2)</label><input type="number" id="p_arenado_m2" oninput="savePrices()"></div>
                 </div>
-                <div class="row grand">
-                  <div class="k">TOTAL</div>
-                  <div class="v" id="pv_total">S/ 0.00</div>
-                </div>
-              </div>
             </div>
+        </div>
+        <button class="btn btn-primary" onclick="toggleConfig()" style="margin-top: 25px;">Guardar y Cerrar Ajustes</button>
+    </div>
+</div>
 
-            <div class="footer">
-              <div class="left">
-                <span class="foot-pill"><span class="dot"></span><b>Contacto</b>: <span id="pv_footerContact">—</span></span>
-                <span class="foot-pill"><span class="dot"></span><b>WhatsApp</b>: <span id="pv_footerWsp">—</span></span>
-                <span class="foot-pill" id="pv_footerRucWrap">
-                  <span class="dot"></span><b>RUC</b>: <span id="pv_footerRuc">—</span>
-                </span>
-              </div>
+<!-- ==================================================== -->
+<!-- CONTENEDOR DE LA COTIZACIÓN PDF                      -->
+<!-- ==================================================== -->
+<div id="boletaContainerWrapper">
+    <!-- NUEVOS BOTONES DE EXPORTACIÓN (Incluye Enviar por WhatsApp) -->
+    <div class="form-grid" style="margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="volver()" style="border-color: #333; color: white;">⬅️ Volver al Editor</button>
+        <button class="btn btn-whatsapp" onclick="enviarWhatsAppTexto()">💬 Enviar Texto a WhatsApp</button>
+        <button class="btn btn-blue" onclick="descargarImagen()">📸 Exportar WhatsApp (.png)</button>
+        <button class="btn btn-primary" onclick="imprimirPDF()">🖨️ Guardar PDF / Imprimir</button>
+    </div>
+
+    <div id="boletaView">
+        <div class="watermark" id="bolWatermark"></div>
+        <div class="boleta-top-code" id="bolCodigo">COT-000000</div>
+
+        <div class="boleta-header">
+            <div class="logo-box"><img id="bolLogo" src="logo.png" onerror="this.style.display='none'"></div>
+            <div class="bol-info">
+                <h2>Cotización</h2>
+                <strong id="resEmpresa">Dazoru Projects</strong>
+                <p>Lima, Perú</p>
+                <p>Cel: <span id="resTelf"></span></p>
+                <p>Correo: <span id="resEmail"></span></p>
             </div>
+        </div>
+        
+        <div class="client-section">
+            <h3>Detalles del Cliente</h3>
+            <p><strong>Nombre:</strong> <span id="resCliente"></span></p>
+            <p><strong>Fecha Emisión:</strong> <span id="resFecha"></span></p>
+            <p><strong>Teléfono:</strong> <span id="resCel"></span></p>
+            <p><strong>Método de Pago:</strong> <span id="resPago" style="color:var(--primary); font-weight:bold; font-size:13px; text-transform:uppercase;"></span></p>
+            <p style="grid-column: span 2;"><strong>Dirección:</strong> <span id="resDir"></span></p>
+        </div>
 
-          </div>
-        </section>
+        <div class="install-banner" id="bannerInstal">
+            📅 INSTALACIÓN ESTIMADA: <span id="resFechaInstal">---</span>
+        </div>
 
-        <!-- PAGE 2 -->
-        <section class="page" aria-label="Página 2">
-          <div class="page-inner" style="gap:8px;">
+        <table>
+            <thead><tr><th>Descripción</th><th class="text-center">Cant.</th><th class="text-right">P. Unit.</th><th class="text-right">Subtotal</th></tr></thead>
+            <tbody id="tablaItems"></tbody>
+        </table>
 
-            <div class="topbar">
-              <div class="brand">
-                <div class="logo"><img id="pv_logo2" alt="logo" /></div>
-                <div class="brand-text">
-                  <div class="name" id="pv_companyName3">DAZORU PROJECTS</div>
-                  <div class="sub" id="pv_companySub2">Decoración • Melamina • Espejos</div>
-                </div>
-              </div>
+        <div class="summary-section">
+            <div class="summary-row"><span>Subtotal Prod:</span><span id="subProd"></span></div>
+            <div class="summary-row"><span>Envío:</span><span id="subEnv"></span></div>
+            <div class="summary-row"><span>Instalación:</span><span id="subInst"></span></div>
+            <div class="summary-row" style="color:#d9534f;"><span>Descuento:</span><span id="subDesc"></span></div>
+            <div class="summary-row summary-total"><span>TOTAL:</span><span id="resTotal"></span></div>
+        </div>
 
-              <!-- ✅ Igual que Página 1 -->
-              <div class="topbar-right">
-                <div class="tag">Cotización | <span id="pv_quoteNoTop2">DP-0001</span></div>
-                <div class="num">Fecha: <span id="pv_dateTop2">2026-02-10</span></div>
-              </div>
+        <div class="terms">
+            <strong>Términos y Condiciones:</strong> <span id="resTerminos"></span>
+        </div>
+
+        <div id="paymentFooter">
+            <span class="pay-title">Medios de pago aceptados por la empresa:</span>
+            <img id="bolPayLogo" src="" style="max-width: 100%; max-height: 80px; display: none; margin: 0 auto;">
+            <div class="pay-badges-container" id="defaultPayLogos">
+                <span class="badge-pay b-yape">YAPE</span>
+                <span class="badge-pay b-plin">PLIN</span>
+                <span class="badge-pay b-bcp">BCP</span>
+                <span class="badge-pay b-bbva">BBVA</span>
+                <span class="badge-pay b-interbank">INTERBANK</span>
+                <span class="badge-pay b-tarjeta">TARJETAS</span>
+                <span class="badge-pay b-efectivo">EFECTIVO</span>
             </div>
+        </div>
 
-            <!-- watermark -->
-            <div class="watermark" id="pv_watermarkWrap" style="display:none;">
-              <img id="pv_watermarkImg" alt="watermark" />
-            </div>
+        <div class="web-footer" id="resWebContainer">
+            🌐 Visítanos en nuestro sitio web: <span id="resWeb"></span>
+        </div>
 
-            <div class="page2-content">
-              <div class="h2-title">Especificaciones técnicas detalladas</div>
-              <div class="detail-text" id="pv_detailSpecs"></div>
+    </div>
+</div>
 
-              <div class="h2-title" style="margin-top:10px;">Condiciones comerciales</div>
-              <div class="box" style="padding:0; overflow:hidden;">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style="width:32%;">Concepto</th>
-                      <th>Detalle</th>
-                    </tr>
-                  </thead>
-                  <tbody id="pv_condsBody"></tbody>
-                </table>
-              </div>
-
-              <div class="accept-title">Aceptación de la cotización</div>
-              <div class="accept-text" id="pv_acceptText"></div>
-
-              <div class="box" style="padding:0; overflow:hidden;">
-                <table class="sign2-table">
-                  <tbody>
-                    <tr>
-                      <td style="width:50%;">Cliente (firma): <span class="line"></span></td>
-                      <td style="width:50%;">Dazoru Projects (firma): <span class="line"></span></td>
-                    </tr>
-                    <tr>
-                      <td>DNI: <span id="pv_dni">__________</span></td>
-                      <td>Fecha: <span id="pv_signDate">__/__/20__</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="left">
-                <span class="foot-pill"><span class="dot"></span><b>Contacto</b>: <span id="pv_footerContact2">—</span></span>
-                <span class="foot-pill"><span class="dot"></span><b>WhatsApp</b>: <span id="pv_footerWsp2">—</span></span>
-                <span class="foot-pill" id="pv_footerRucWrap2">
-                  <span class="dot"></span><b>RUC</b>: <span id="pv_footerRuc2">—</span>
-                </span>
-              </div>
-            </div>
-
-          </div>
-        </section>
-      </div>
-    </main>
-
-  </div>
-
-  <script>
-    (function(){
-      "use strict";
-
-      // ===== PWA register =====
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(()=>{});
-        });
-      }
-
-      const STORAGE_KEY = "dazoru_proforma_v3";
-      const $ = (id)=>document.getElementById(id);
-
-      const el = {
-        // empresa
-        companyName: $("in_companyName"),
-        ruc: $("in_ruc"),
-        address: $("in_address"),
-        whatsapp: $("in_whatsapp"),
-        phone: $("in_phone"),
-        email: $("in_email"),
-        logo: $("in_logo"),
-        showRucFooter: $("in_showRucFooter"),
-        showWatermark: $("in_showWatermark"),
-
-        // cotizacion
-        titleOverride: $("in_titleOverride"),
-        quoteNo: $("in_quoteNo"),
-        date: $("in_date"),
-        client: $("in_client"),
-        project: $("in_project"),
-        summary: $("in_summary"),
-        discType: $("in_discType"),
-        discValue: $("in_discValue"),
-
-        // page2 inputs
-        detailSpecs: $("in_detailSpecs"),
-        acceptText: $("in_acceptText"),
-        signClient: $("in_signClient"),
-        signCompany: $("in_signCompany"),
-        dni: $("in_dni"),
-        signDate: $("in_signDate"),
-
-        // editors
-        itemsEditor: $("itemsEditor"),
-        condsEditor: $("condsEditor"),
-        itemsCount: $("itemsCount"),
-        condsCount: $("condsCount"),
-
-        // btns
-        btnAddItem: $("btnAddItem"),
-        btnAddCond: $("btnAddCond"),
-        btnSave: $("btnSave"),
-        btnReset: $("btnReset"),
-        btnPDF: $("btnPDF"),
-
-        // preview page1
-        pv_logo1: $("pv_logo1"),
-        pv_logo2: $("pv_logo2"),
-        pv_companyName1: $("pv_companyName1"),
-        pv_companySub1: $("pv_companySub1"),
-        pv_companyName2: $("pv_companyName2"),
-        pv_companyName3: $("pv_companyName3"),
-        pv_companySub2: $("pv_companySub2"),
-        pv_quoteNoTop: $("pv_quoteNoTop"),
-        pv_dateTop: $("pv_dateTop"),
-
-        // ✅ page2 top right same as page1
-        pv_quoteNoTop2: $("pv_quoteNoTop2"),
-        pv_dateTop2: $("pv_dateTop2"),
-
-        pv_title: $("pv_title"),
-        pv_client: $("pv_client"),
-        pv_project: $("pv_project"),
-        pv_quoteNo: $("pv_quoteNo"),
-        pv_date: $("pv_date"),
-        pv_ruc: $("pv_ruc"),
-        pv_address: $("pv_address"),
-
-        // ✅ empresa: numero y correo separados
-        pv_phoneLine: $("pv_phoneLine"),
-        pv_emailLine: $("pv_emailLine"),
-
-        pv_summary: $("pv_summary"),
-        pv_itemsBody: $("pv_itemsBody"),
-        pv_subtotal: $("pv_subtotal"),
-        pv_discountRow: $("pv_discountRow"),
-        pv_discount: $("pv_discount"),
-        pv_total: $("pv_total"),
-        pv_footerContact: $("pv_footerContact"),
-        pv_footerWsp: $("pv_footerWsp"),
-        pv_footerRuc: $("pv_footerRuc"),
-        pv_footerRucWrap: $("pv_footerRucWrap"),
-
-        // preview page2
-        pv_detailSpecs: $("pv_detailSpecs"),
-        pv_condsBody: $("pv_condsBody"),
-        pv_acceptText: $("pv_acceptText"),
-        pv_dni: $("pv_dni"),
-        pv_signDate: $("pv_signDate"),
-        pv_footerContact2: $("pv_footerContact2"),
-        pv_footerWsp2: $("pv_footerWsp2"),
-        pv_footerRuc2: $("pv_footerRuc2"),
-        pv_footerRucWrap2: $("pv_footerRucWrap2"),
-
-        // watermark
-        pv_watermarkWrap: $("pv_watermarkWrap"),
-        pv_watermarkImg: $("pv_watermarkImg"),
-
-        // UI
-        statusPill: $("statusPill"),
-        zoomRange: $("zoomRange"),
-        zoomLabel: $("zoomLabel"),
-      };
-
-      function todayISO(){
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth()+1).padStart(2,"0");
-        const dd = String(d.getDate()).padStart(2,"0");
-        return `${yyyy}-${mm}-${dd}`;
-      }
-
-      function cryptoId(){
-        try{
-          const a = new Uint32Array(2);
-          crypto.getRandomValues(a);
-          return (a[0].toString(16)+a[1].toString(16));
-        }catch(e){
-          return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+<script>
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstall').style.display = 'block';
+    });
+    function installPWA() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') document.getElementById('btnInstall').style.display = 'none'; deferredPrompt = null; });
         }
-      }
+    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-      function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-      function safeText(s){ return (s===null || s===undefined) ? "" : String(s); }
+    function loadTheme() {
+        const bg = localStorage.getItem('themeBg') || '#0f172a'; const primary = localStorage.getItem('themePrimary') || '#D4AF37';
+        document.documentElement.style.setProperty('--bg-dark', bg); document.documentElement.style.setProperty('--primary', primary);
+        document.getElementById('metaTheme').content = bg; document.getElementById('themeBg').value = bg; document.getElementById('themePrimary').value = primary; 
+    }
+    function updateTheme() {
+        const bg = document.getElementById('themeBg').value; 
+        const primary = document.getElementById('themePrimary').value;
+        document.documentElement.style.setProperty('--bg-dark', bg); 
+        document.documentElement.style.setProperty('--primary', primary);
+        document.getElementById('metaTheme').content = bg;
+        localStorage.setItem('themeBg', bg); 
+        localStorage.setItem('themePrimary', primary);
+    }
 
-      function escapeHtml(str){
-        return String(str ?? "")
-          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-          .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-      }
-      function escapeAttr(str){ return escapeHtml(str).replace(/"/g,"&quot;"); }
+    let itemsCustomificados = [];
 
-      function money(n){
-        const v = Number.isFinite(n) ? n : 0;
-        return "S/ " + v.toFixed(2);
-      }
+    window.onload = () => {
+        loadTheme();
+        document.getElementById('configEmpresa').value = localStorage.getItem('d_nom') || "Dazoru Projects";
+        document.getElementById('configCelulares').value = localStorage.getItem('d_tel') || "930 132 709 / 958 786 703";
+        document.getElementById('configEmail').value = localStorage.getItem('d_em') || "dazoruprojects@gmail.com";
+        
+        const defTerms = "Esta cotización es válida por 15 días. El tiempo estimado de entrega es de 3 a 5 días hábiles a partir de la confirmación. Una vez procesado el vidrio/melamina y aprobado el diseño, no se aceptan devoluciones por cambio de medidas de último minuto.";
+        document.getElementById('configTerminos').value = localStorage.getItem('d_terms') || defTerms;
+        document.getElementById('configWeb').value = localStorage.getItem('d_web') || "";
 
-      function setStatus(text, kind="ok"){
-        el.statusPill.textContent = text;
-        el.statusPill.style.borderColor = kind==="danger" ? "rgba(255,91,91,.45)" : "rgba(53,196,122,.35)";
-        el.statusPill.style.background = kind==="danger" ? "rgba(255,91,91,.18)" : "rgba(53,196,122,.14)";
-      }
+        const precios = ['p_3mm_marco', 'p_3mm', 'p_4mm', 'p_opti', 'p_pul', 'p_bis1', 'p_bis2', 'p_led1', 'p_led3', 'p_seg', 'p_arenado_base', 'p_arenado_m2'];
+        const valoresDef = {p_3mm_marco:120, p_3mm:120, p_4mm:160, p_opti:300, p_pul:5, p_bis1:12.5, p_bis2:22.5, p_led1:170, p_led3:240, p_seg:25, p_arenado_base:55, p_arenado_m2:140};
+        precios.forEach(id => document.getElementById(id).value = localStorage.getItem(id) || valoresDef[id]);
 
-      function makePlaceholderLogo(name){
-        const initials = (safeText(name).trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"").join("") || "DP").slice(0,2);
-        const svg =
-`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#e2d2b8"/>
-      <stop offset="1" stop-color="#7d644c"/>
-    </linearGradient>
-  </defs>
-  <rect rx="18" ry="18" x="0" y="0" width="120" height="120" fill="url(#g)"/>
-  <text x="60" y="74" font-family="Arial, sans-serif" font-size="44" font-weight="900" text-anchor="middle" fill="#1f140c">${initials}</text>
-</svg>`;
-        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-      }
-
-      const DEFAULTS = {
-        company: {
-          name: "Dazoru Projects",
-          sub: "Decoración • Melamina • Espejos",
-          ruc: "00000000000",
-          address: "Lima, Perú",
-          whatsapp: "+51 999 999 999",
-          phone: "+51 999 999 999",
-          email: "ventas@dazoru.pe",
-          logoDataUrl: "",
-          showRucFooter: true,
-          showWatermark: true
-        },
-        quote: {
-          titleOverride: "HOJA DE COTIZACIÓN - PROYECTO: MUEBLE DE BAÑO MODERNO (MIRAFLORES)",
-          no: "DP-0001",
-          date: todayISO(),
-          client: "Sr(a). Cliente",
-          project: "Mueble de baño moderno (Miraflores)",
-          summary:
-`Presentamos la propuesta para la fabricación e instalación del mueble de baño.
-Incluye materiales, mano de obra, instalación y acabados según especificaciones.
-Los precios están expresados en Soles (PEN).`,
-          discType: "PEN",
-          discValue: 0
-        },
-        items: [
-          {
-            id: cryptoId(),
-            include: true,
-            ambiente: "Baño",
-            producto: "Mueble bajo lavatorio",
-            descripcion: "Melamina 18mm + lavatorio (según modelo)",
-            especificaciones: "Melamina 18mm\nCantos PVC\nBisagras cierre suave\nHerrajes A1",
-            precio: 850
-          },
-          {
-            id: cryptoId(),
-            include: true,
-            ambiente: "Baño",
-            producto: "Espejo decorativo LED",
-            descripcion: "Espejo con iluminación cálida",
-            especificaciones: "Biselado perimetral\nTira LED 12V\nInterruptor táctil",
-            precio: 520
-          }
-        ],
-        page2: {
-          detailSpecs:
-`1) Melamina RH (Resistente a Humedad)
-• Tablero melamínico Pelíkano de 18 mm para ambientes húmedos.
-• Cantos sellados con cinta PVC para proteger bordes y prolongar la vida útil.
-• Ensamble con tornillería adecuada y refuerzos donde aplique.
-
-2) Espejo Optimirror 3 mm
-• Espesor: 3 mm.
-• Instalación recomendada sobre superficie nivelada con adhesivo compatible (silicona neutra).
-• Opcional según diseño: canto pulido / biselado.
-
-3) Herrajes y accesorios (según modelo)
-• Puertas: bisagras tipo cazoleta 35 mm (apertura suave según disponibilidad).
-• Mueble sobre inodoro: sistema hidráulico para apertura controlada.
-• Mueble flotante: fijación con anclajes según tipo de muro (ladrillo, concreto, drywall).
-
-4) Iluminación LED (solo en el modelo con LED)
-• Tira LED 12V (o equivalente) instalada de forma discreta.
-• Tono a elección: cálida / neutra / fría (a coordinar).
-• Incluye fuente de poder y conexión básica (requiere punto de energía en el ambiente).`,
-          conditions: [
-            { id: cryptoId(), concepto:"Validez de la cotización", detalle:"10 días calendario desde la fecha de emisión." },
-            { id: cryptoId(), concepto:"Plazo de entrega", detalle:"A coordinar según medidas finales, color y disponibilidad de materiales." },
-            { id: cryptoId(), concepto:"Forma de pago", detalle:"A coordinar (ej.: 50% adelanto / 50% contra entrega)." },
-            { id: cryptoId(), concepto:"Personalización", detalle:"Medidas, distribución interna y color de melamina se confirman antes de fabricar." },
-            { id: cryptoId(), concepto:"Transporte e instalación", detalle:"Se cotiza según ubicación y tipo de muro (drywall, ladrillo, concreto, etc.)." },
-            { id: cryptoId(), concepto:"Garantía", detalle:"Garantía por fabricación. No cubre daños por mal uso, filtraciones de agua o trabajos de terceros." },
-            { id: cryptoId(), concepto:"Cuidado y mantenimiento", detalle:"Limpiar con paño suave. Evitar químicos abrasivos y exceso de agua en cantos." }
-          ],
-          acceptText:
-"Con la aceptación del cliente se confirma: diseño final, medidas, color de melamina y condiciones de entrega/instalación.",
-          dni: "__________",
-          signDate: "__/__/20__",
-          signClient: "",
-          signCompany: ""
+        const savedLogo = localStorage.getItem('d_logo');
+        if(savedLogo) {
+            document.getElementById('bolLogo').src = savedLogo; document.getElementById('bolLogo').style.display = 'block'; document.getElementById('bolWatermark').style.backgroundImage = `url(${savedLogo})`;
         }
-      };
-
-      let state = deepClone(DEFAULTS);
-
-      const tabButtons = Array.from(document.querySelectorAll(".tab"));
-      tabButtons.forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const key = btn.getAttribute("data-tab");
-          tabButtons.forEach(b=>b.setAttribute("aria-selected","false"));
-          btn.setAttribute("aria-selected","true");
-          document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
-          const target = document.getElementById("tab-"+key);
-          if (target) target.classList.add("active");
-        });
-      });
-
-      function renderSpecCell(text){
-        const raw = safeText(text).replace(/\r\n/g,"\n").trim();
-        if (!raw) return '<span class="muted">—</span>';
-        const lines = raw.split("\n").map(s=>s.trim()).filter(Boolean);
-        if (lines.length >= 2){
-          const li = lines.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
-          return `<ul class="spec-ul">${li}</ul>`;
+        
+        const savedPayLogo = localStorage.getItem('d_pay_logo');
+        if(savedPayLogo) {
+            document.getElementById('bolPayLogo').src = savedPayLogo; document.getElementById('bolPayLogo').style.display = 'block'; document.getElementById('defaultPayLogos').style.display = 'none';
         }
-        return `<p class="spec-p">${escapeHtml(raw)}</p>`;
-      }
 
-      function computeTotals(){
-        const subtotal = state.items.filter(i=>i.include).reduce((acc,i)=>acc + (parseFloat(i.precio)||0), 0);
-        const discValue = parseFloat(state.quote.discValue)||0;
-        let discountAmount = 0;
-        if (discValue > 0){
-          discountAmount = (state.quote.discType === "PCT")
-            ? subtotal * (discValue/100)
-            : discValue;
-        }
-        discountAmount = Math.min(discountAmount, subtotal);
-        return { subtotal, discountAmount, total: subtotal - discountAmount };
-      }
+        updateOpacity(localStorage.getItem('d_op') || 0.1);
+        document.getElementById('lblSeguridad').innerText = `Lámina de Seguridad (+S/ ${document.getElementById('p_seg').value} m²)`;
+        calc();
+    };
 
-      function renderItemsEditor(){
-        el.itemsEditor.innerHTML = "";
-        el.itemsCount.textContent = `${state.items.length} ítems`;
+    function saveConf() { 
+        localStorage.setItem('d_nom', document.getElementById('configEmpresa').value); 
+        localStorage.setItem('d_tel', document.getElementById('configCelulares').value); 
+        localStorage.setItem('d_em', document.getElementById('configEmail').value); 
+        localStorage.setItem('d_terms', document.getElementById('configTerminos').value);
+        localStorage.setItem('d_web', document.getElementById('configWeb').value);
+    }
+    
+    function savePrices() {
+        const precios = ['p_3mm_marco', 'p_3mm', 'p_4mm', 'p_opti', 'p_pul', 'p_bis1', 'p_bis2', 'p_led1', 'p_led3', 'p_seg', 'p_arenado_base', 'p_arenado_m2'];
+        precios.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+        document.getElementById('lblSeguridad').innerText = `Lámina de Seguridad (+S/ ${document.getElementById('p_seg').value} m²)`; calc();
+    }
+    
+    function handlePayLogo(e) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base = reader.result; localStorage.setItem('d_pay_logo', base);
+            document.getElementById('bolPayLogo').src = base; document.getElementById('bolPayLogo').style.display = 'block'; document.getElementById('defaultPayLogos').style.display = 'none';
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
 
-        state.items.forEach((it, idx)=>{
-          const wrap = document.createElement("div");
-          wrap.className = "item";
-          wrap.innerHTML = `
-            <div class="item__head">
-              <div class="title">
-                <strong>Ítem ${idx+1}</strong>
-                <label class="check">
-                  <input type="checkbox" data-act="include" ${it.include ? "checked":""} />
-                  Incluir
-                </label>
-              </div>
-              <div class="actions">
-                <button class="mini-btn del" data-act="delete" type="button">Eliminar</button>
-              </div>
-            </div>
+    function removePayLogo() {
+        localStorage.removeItem('d_pay_logo');
+        document.getElementById('bolPayLogo').src = ""; document.getElementById('bolPayLogo').style.display = 'none';
+        document.getElementById('defaultPayLogos').style.display = 'flex'; document.getElementById('payLogoInput').value = "";
+    }
 
-            <div class="grid2">
-              <div>
-                <label>Ambiente</label>
-                <input type="text" data-act="ambiente" value="${escapeAttr(it.ambiente)}" />
-              </div>
-              <div>
-                <label>Producto</label>
-                <input type="text" data-act="producto" value="${escapeAttr(it.producto)}" />
-              </div>
-            </div>
+    function switchTipo(val) {
+        if (val === 'espejos') { document.getElementById('wrapperEspejos').classList.remove('hidden'); document.getElementById('wrapperOtros').classList.add('hidden'); } 
+        else { document.getElementById('wrapperEspejos').classList.add('hidden'); document.getElementById('wrapperOtros').classList.remove('hidden'); }
+        calc();
+    }
 
-            <div class="grid2">
-              <div>
-                <label>Descripción (opcional)</label>
-                <input type="text" data-act="descripcion" value="${escapeAttr(it.descripcion)}" />
-              </div>
-              <div>
-                <label>Precio (S/)</label>
-                <input type="number" min="0" step="0.01" data-act="precio" value="${escapeAttr(it.precio)}" />
-              </div>
-            </div>
+    function agregarItemCustom() {
+        const desc = document.getElementById('customDesc').value.trim(); const cant = parseInt(document.getElementById('customCant').value) || 1; const precio = parseFloat(document.getElementById('customPrecio').value) || 0;
+        if (!desc) return alert("Ingresa una descripción."); if (precio <= 0) return alert("Ingresa un precio válido.");
+        itemsCustomificados.push({ desc, cant, precio });
+        document.getElementById('customDesc').value = ""; document.getElementById('customCant').value = "1"; document.getElementById('customPrecio').value = "";
+        renderItemsCustom(); calc();
+    }
 
-            <label>Especificaciones (una por línea = bullets)</label>
-            <textarea data-act="especificaciones">${escapeHtml(it.especificaciones)}</textarea>
-          `;
+    function renderItemsCustom() {
+        const contenedor = document.getElementById('listaItemsCustom');
+        if (itemsCustomificados.length === 0) { contenedor.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size:13px; margin: 30px 0;">La lista de trabajos está vacía.</p>`; return; }
+        let html = "";
+        itemsCustomificados.forEach((item, index) => { html += `<div class="badge-item"><span style="flex: 1;"><b>${item.cant}</b> x ${item.desc}</span><strong style="color: var(--primary); margin-right: 15px;">S/ ${(item.cant * item.precio).toFixed(2)}</strong><button class="del-btn" onclick="eliminarItemCustom(${index})">❌</button></div>`; });
+        contenedor.innerHTML = html;
+    }
+    function eliminarItemCustom(index) { itemsCustomificados.splice(index, 1); renderItemsCustom(); calc(); }
+    function toggleConfig() { const p = document.getElementById('configModal'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; }
 
-          wrap.addEventListener("input", (e)=>{
-            const t = e.target;
-            const act = t?.getAttribute?.("data-act");
-            if (!act) return;
-            if (act==="ambiente") it.ambiente = t.value;
-            if (act==="producto") it.producto = t.value;
-            if (act==="descripcion") it.descripcion = t.value;
-            if (act==="precio") it.precio = parseFloat(t.value || "0") || 0;
-            if (act==="especificaciones") it.especificaciones = t.value;
-            renderPreview();
-            setStatus("Cambios sin guardar","danger");
-          });
+    function handleLogo(e) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base = reader.result; localStorage.setItem('d_logo', base);
+            document.getElementById('bolLogo').src = base; document.getElementById('bolLogo').style.display = 'block'; document.getElementById('bolWatermark').style.backgroundImage = `url(${base})`;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+    function updateOpacity(val) { document.getElementById('bolWatermark').style.opacity = val; document.getElementById('opacityRange').value = val; localStorage.setItem('d_op', val); }
 
-          wrap.addEventListener("change", (e)=>{
-            const t = e.target;
-            const act = t?.getAttribute?.("data-act");
-            if (act==="include"){
-              it.include = !!t.checked;
-              renderPreview();
-              setStatus("Cambios sin guardar","danger");
+    function calc() {
+        const tipoEl = document.querySelector('input[name="tipoTrabajo"]:checked');
+        const tipo = tipoEl ? tipoEl.value : 'espejos'; let subProd = 0; let total = 0;
+
+        if (tipo === 'espejos') {
+            const mat = document.getElementById('material').value; const formaEl = document.querySelector('input[name="forma"]:checked'); const forma = formaEl ? formaEl.value : 'rect';
+            const ancho = parseFloat(document.getElementById('ancho').value) || 0; let alto = (forma === 'circ') ? ancho : (parseFloat(document.getElementById('alto').value) || 0); const cant = parseFloat(document.getElementById('cantidad').value) || 1;
+            document.getElementById('colAlto').style.display = (forma === 'circ') ? 'none' : 'block'; document.getElementById('finishGroup').style.display = (mat === '3mm_marco') ? 'none' : 'block';
+
+            if(ancho === 0 || alto === 0) { 
+                const totalElEmpty = document.getElementById('totalDisp');
+                totalElEmpty.innerText = "S/ 0.00"; 
+                return; 
             }
-          });
+            let precioUni = 0;
+            if(mat === '3mm_marco' && ancho <= 50 && alto <= 50 && forma === 'rect') { const t = {30:25, 35:28, 40:30, 45:33, 50:35}; precioUni = t[Math.max(ancho, alto)] || 35; } 
+            else if(ancho === 50 && alto === 50 && forma === 'rect') {
+                let baseRef = 0; if(mat === '4mm') baseRef = 40; else if(mat === 'opti') baseRef = 82; else if(mat === '3mm') baseRef = 35;
+                if(baseRef > 0) { const aca = document.querySelector('input[name="acabado"]:checked').value; precioUni = baseRef + (aca === 'bis1' ? 25 : aca === 'bis2' ? 45 : 0); } else precioUni = calcularDinamico(ancho, alto, forma, mat);
+            } else { precioUni = calcularDinamico(ancho, alto, forma, mat); }
 
-          wrap.addEventListener("click", (e)=>{
-            const t = e.target;
-            const act = t?.getAttribute?.("data-act");
-            if (act==="delete"){
-              state.items = state.items.filter(x=>x.id!==it.id);
-              renderItemsEditor();
-              renderPreview();
-              setStatus("Cambios sin guardar","danger");
+            let areaReal = (forma === 'rect') ? (ancho*alto)/10000 : (Math.PI * Math.pow(ancho/2, 2)) / 10000;
+            if(document.getElementById('arenado').value === 'si') { precioUni += Math.max((parseFloat(localStorage.getItem('p_arenado_base')) || 55), areaReal * (parseFloat(localStorage.getItem('p_arenado_m2')) || 140)); }
+            const led = document.getElementById('led').value;
+            if(led === '1') precioUni += (parseFloat(localStorage.getItem('p_led1')) || 170); if(led === '3') precioUni += (parseFloat(localStorage.getItem('p_led3')) || 240);
+            if(document.getElementById('segCheck').checked) precioUni += (areaReal * (parseFloat(localStorage.getItem('p_seg')) || 25));
+
+            precioUni = Math.ceil(precioUni / 5) * 5; subProd = precioUni * cant;
+            total = subProd + (parseFloat(document.getElementById('envio').value)||0) + (parseFloat(document.getElementById('instal').value)||0) - (parseFloat(document.getElementById('descuento').value)||0);
+            
+            const totalEl = document.getElementById('totalDisp');
+            totalEl.innerText = `S/ ${total.toFixed(2)}`;
+            totalEl.style.transform = 'scale(1.08)';
+            setTimeout(() => totalEl.style.transform = 'scale(1)', 150);
+            
+            return { tipo, total, subProd, precioUni, cant, mat, ancho, alto };
+        } else {
+            itemsCustomificados.forEach(item => subProd += (item.cant * item.precio));
+            total = subProd + (parseFloat(document.getElementById('envio').value)||0) + (parseFloat(document.getElementById('instal').value)||0) - (parseFloat(document.getElementById('descuento').value)||0);
+            
+            const totalEl = document.getElementById('totalDisp');
+            totalEl.innerText = `S/ ${total.toFixed(2)}`;
+            totalEl.style.transform = 'scale(1.08)';
+            setTimeout(() => totalEl.style.transform = 'scale(1)', 150);
+            
+            return { tipo, total, subProd };
+        }
+    }
+
+    function calcularDinamico(w, h, forma, mat) {
+        let area = (forma === 'circ') ? (Math.PI * Math.pow(w/2, 2)) / 10000 : (w * h) / 10000; let perim = (forma === 'rect') ? (w*2 + h*2)/100 : (Math.PI * w)/100;
+        let precioM2 = parseFloat(localStorage.getItem('p_3mm')) || 120;
+        if(mat === '4mm') precioM2 = parseFloat(localStorage.getItem('p_4mm')) || 160; if(mat === 'opti') precioM2 = parseFloat(localStorage.getItem('p_opti')) || 300; 
+        
+        let costoVidrio = area * precioM2; let costoBorde = 0;
+        if(mat === '3mm_marco') { costoVidrio = area * (parseFloat(localStorage.getItem('p_3mm_marco')) || 120); costoBorde = perim * 10; } 
+        else {
+            const aca = document.querySelector('input[name="acabado"]:checked').value;
+            if(aca === 'pul') costoBorde = perim * (parseFloat(localStorage.getItem('p_pul')) || 5);
+            else if(aca === 'bis1') costoBorde = Math.max(25, perim * (parseFloat(localStorage.getItem('p_bis1')) || 12.50));
+            else if(aca === 'bis2') costoBorde = Math.max(45, perim * (parseFloat(localStorage.getItem('p_bis2')) || 22.50));
+        }
+        return costoVidrio + costoBorde;
+    }
+
+    function generarBoleta() {
+        const d = calc();
+        if(!d) return alert("Completa los datos mínimos."); if(d.tipo === 'otros' && itemsCustomificados.length === 0) return alert("Agrega al menos un trabajo.");
+
+        document.getElementById('resEmpresa').innerText = document.getElementById('configEmpresa').value;
+        document.getElementById('resTelf').innerText = document.getElementById('configCelulares').value;
+        document.getElementById('resEmail').innerText = document.getElementById('configEmail').value;
+        document.getElementById('resCliente').innerText = document.getElementById('cliente').value || "Cliente General";
+        document.getElementById('resCel').innerText = document.getElementById('telCliente').value || "---";
+        document.getElementById('resDir').innerText = document.getElementById('dirCliente').value || "---";
+        
+        document.getElementById('resPago').innerText = document.getElementById('metodoPago').value;
+        
+        const hoy = new Date();
+        document.getElementById('resFecha').innerText = hoy.toLocaleDateString('es-PE');
+        document.getElementById('bolCodigo').innerText = `COT-${Math.floor(100000 + Math.random() * 900000)}`;
+
+        const f = document.getElementById('fechaInstalManual').value; const banner = document.getElementById('bannerInstal');
+        if(f) { const dateObj = new Date(f + "T00:00:00"); document.getElementById('resFechaInstal').innerText = `${dateObj.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' })}, ${document.getElementById('horaInstalManual').value}`; banner.style.display = "block"; } else banner.style.display = "none";
+
+        let tablaHTML = "";
+        if(d.tipo === 'espejos') {
+            let nombre = document.getElementById('material').options[document.getElementById('material').selectedIndex].text.toUpperCase();
+            if(d.mat !== '3mm_marco') nombre += ` (${document.querySelector('input[name="acabado"]:checked').nextElementSibling.innerText})`;
+            const ledVal = document.getElementById('led').value; if(ledVal !== 'no') nombre += (ledVal==='1') ? ' + LED 1 Tono' : ' + LED 3 Tonos';
+            nombre += ` [${document.getElementById('ancho').value}x${document.getElementById('alto').value}cm]`;
+            tablaHTML = `<tr><td>${nombre}</td><td class="text-center">${d.cant}</td><td class="text-right">S/ ${d.precioUni.toFixed(2)}</td><td class="text-right">S/ ${d.subProd.toFixed(2)}</td></tr>`;
+        } else { itemsCustomificados.forEach(item => { tablaHTML += `<tr><td>${item.desc.toUpperCase()}</td><td class="text-center">${item.cant}</td><td class="text-right">S/ ${item.precio.toFixed(2)}</td><td class="text-right">S/ ${(item.cant*item.precio).toFixed(2)}</td></tr>`; }); }
+        
+        document.getElementById('tablaItems').innerHTML = tablaHTML;
+        document.getElementById('subProd').innerText = `S/ ${d.subProd.toFixed(2)}`;
+        document.getElementById('subEnv').innerText = `S/ ${parseFloat(document.getElementById('envio').value||0).toFixed(2)}`;
+        document.getElementById('subInst').innerText = `S/ ${parseFloat(document.getElementById('instal').value||0).toFixed(2)}`;
+        document.getElementById('subDesc').innerText = `- S/ ${parseFloat(document.getElementById('descuento').value||0).toFixed(2)}`;
+        document.getElementById('resTotal').innerText = `S/ ${d.total.toFixed(2)}`;
+
+        document.getElementById('resTerminos').innerText = document.getElementById('configTerminos').value;
+        
+        const webText = document.getElementById('configWeb').value.trim();
+        const webContainer = document.getElementById('resWebContainer');
+        if(webText !== "") {
+            document.getElementById('resWeb').innerText = webText;
+            webContainer.style.display = "block";
+        } else {
+            webContainer.style.display = "none";
+        }
+
+        document.getElementById('calcView').style.display = 'none'; document.getElementById('boletaContainerWrapper').style.display = 'block';
+    }
+
+    function volver() { document.getElementById('calcView').style.display = 'grid'; document.getElementById('boletaContainerWrapper').style.display = 'none'; }
+
+    // --- NUEVA FUNCIÓN: ENVIAR POR WHATSAPP TEXTO ---
+    function enviarWhatsAppTexto() {
+        const telefono = document.getElementById('telCliente').value.replace(/\s+/g, '');
+        let cliente = document.getElementById('resCliente').innerText.trim();
+        if (cliente === "Cliente General" || cliente === "") cliente = "estimado/a";
+        const total = document.getElementById('resTotal').innerText;
+        
+        let mensaje = `Hola ${cliente}, te envío la cotización de tu proyecto por un total de ${total}. Quedo atento a tus comentarios.`;
+        const mensajeCodificado = encodeURIComponent(mensaje);
+        
+        let url = "";
+        if (telefono) {
+            let numeroFinal = telefono;
+            // Si el usuario en Perú escribe un numero de 9 digitos que empieza con 9, agrega automáticamente 51.
+            if (numeroFinal.length === 9 && numeroFinal.startsWith('9')) {
+                numeroFinal = '51' + numeroFinal;
             }
-          });
-
-          el.itemsEditor.appendChild(wrap);
-        });
-      }
-
-      function renderCondsEditor(){
-        el.condsEditor.innerHTML = "";
-        el.condsCount.textContent = `${state.page2.conditions.length} condiciones`;
-
-        state.page2.conditions.forEach((c, idx)=>{
-          const wrap = document.createElement("div");
-          wrap.className = "cond";
-          wrap.innerHTML = `
-            <div class="cond__head">
-              <strong>Condición ${idx+1}</strong>
-              <button class="mini-btn del" data-act="delete" type="button">Eliminar</button>
-            </div>
-            <div class="grid2">
-              <div>
-                <label>Concepto</label>
-                <input type="text" data-act="concepto" value="${escapeAttr(c.concepto)}" />
-              </div>
-              <div>
-                <label>Detalle</label>
-                <input type="text" data-act="detalle" value="${escapeAttr(c.detalle)}" />
-              </div>
-            </div>
-          `;
-
-          wrap.addEventListener("input", (e)=>{
-            const t = e.target;
-            const act = t?.getAttribute?.("data-act");
-            if (!act) return;
-            if (act==="concepto") c.concepto = t.value;
-            if (act==="detalle") c.detalle = t.value;
-            renderPreview();
-            setStatus("Cambios sin guardar","danger");
-          });
-
-          wrap.addEventListener("click", (e)=>{
-            const t = e.target;
-            const act = t?.getAttribute?.("data-act");
-            if (act==="delete"){
-              state.page2.conditions = state.page2.conditions.filter(x=>x.id!==c.id);
-              renderCondsEditor();
-              renderPreview();
-              setStatus("Cambios sin guardar","danger");
-            }
-          });
-
-          el.condsEditor.appendChild(wrap);
-        });
-      }
-
-      function renderPreview(){
-        const c = state.company;
-        const q = state.quote;
-        const p2 = state.page2;
-
-        const logo = c.logoDataUrl || "";
-        const logoToUse = logo ? logo : makePlaceholderLogo(c.name);
-
-        el.pv_logo1.src = logoToUse;
-        el.pv_logo2.src = logoToUse;
-
-        el.pv_companyName1.textContent = safeText(c.name);
-        el.pv_companyName2.textContent = safeText(c.name);
-        el.pv_companyName3.textContent = safeText(c.name).toUpperCase();
-        el.pv_companySub1.textContent = safeText(c.sub);
-        el.pv_companySub2.textContent = safeText(c.sub);
-
-        el.pv_quoteNoTop.textContent = safeText(q.no);
-        el.pv_dateTop.textContent = safeText(q.date);
-
-        // ✅ page2 top right igual
-        el.pv_quoteNoTop2.textContent = safeText(q.no);
-        el.pv_dateTop2.textContent = safeText(q.date);
-
-        const autoTitle = `HOJA DE COTIZACIÓN - PROYECTO: ${(safeText(q.project).trim() || "—").toUpperCase()}`;
-        const title = safeText(q.titleOverride).trim() ? safeText(q.titleOverride).trim() : autoTitle;
-        el.pv_title.textContent = title;
-
-        el.pv_client.textContent = safeText(q.client);
-        el.pv_project.textContent = safeText(q.project);
-        el.pv_quoteNo.textContent = safeText(q.no);
-        el.pv_date.textContent = safeText(q.date);
-
-        el.pv_ruc.textContent = safeText(c.ruc);
-        el.pv_address.textContent = safeText(c.address);
-
-        // ✅ Empresa separado
-        const numero = [safeText(c.whatsapp).trim(), safeText(c.phone).trim()].filter(Boolean).join(" / ");
-        el.pv_phoneLine.textContent = numero || "—";
-        el.pv_emailLine.textContent = safeText(c.email).trim() || "—";
-
-        el.pv_summary.textContent = safeText(q.summary);
-
-        const rows = state.items
-          .filter(i=>i.include)
-          .map(i=>{
-            const desc = safeText(i.descripcion).trim();
-            const detalle = desc ? `${escapeHtml(desc)}` : `<span class="muted">—</span>`;
-            return `
-              <tr>
-                <td>${escapeHtml(safeText(i.ambiente))}</td>
-                <td><b>${escapeHtml(safeText(i.producto))}</b></td>
-                <td>${renderSpecCell(i.especificaciones)}</td>
-                <td>${detalle}</td>
-                <td class="price">${money(parseFloat(i.precio)||0)}</td>
-              </tr>
-            `;
-          }).join("");
-
-        el.pv_itemsBody.innerHTML = rows || `
-          <tr><td colspan="5" class="muted">No hay ítems incluidos. Activa “Incluir” en al menos un ítem.</td></tr>
-        `;
-
-        const { subtotal, discountAmount, total } = computeTotals();
-        el.pv_subtotal.textContent = money(subtotal);
-        el.pv_total.textContent = money(total);
-
-        if (discountAmount > 0.00001){
-          el.pv_discountRow.style.display = "flex";
-          if (q.discType==="PCT"){
-            el.pv_discount.textContent = `- ${money(discountAmount)} (${(parseFloat(q.discValue)||0).toFixed(2)}%)`;
-          }else{
-            el.pv_discount.textContent = `- ${money(discountAmount)}`;
-          }
-        }else{
-          el.pv_discountRow.style.display = "none";
+            url = `https://wa.me/${numeroFinal}?text=${mensajeCodificado}`;
+        } else {
+            // Si no escribió número, abre WhatsApp para elegir el contacto manualmente
+            url = `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
         }
+        window.open(url, '_blank');
+    }
 
-        // footer
-        el.pv_footerContact.textContent = safeText(c.email) || "—";
-        el.pv_footerWsp.textContent = safeText(c.whatsapp) || "—";
-        el.pv_footerRuc.textContent = safeText(c.ruc) || "—";
-        el.pv_footerContact2.textContent = safeText(c.email) || "—";
-        el.pv_footerWsp2.textContent = safeText(c.whatsapp) || "—";
-        el.pv_footerRuc2.textContent = safeText(c.ruc) || "—";
+    function obtenerNombreArchivo(extension) {
+        const codigo = document.getElementById('bolCodigo').innerText;
+        let nombreC = document.getElementById('resCliente').innerText.trim().replace(/[^a-zA-Z0-9]/g, '_');
+        if (nombreC === "Cliente_General" || nombreC === "") nombreC = "Cliente";
+        
+        const hoy = new Date();
+        const dia = hoy.getDate().toString().padStart(2, '0');
+        const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
+        const anio = hoy.getFullYear();
+        
+        return `${codigo}_${nombreC}_${dia}-${mes}-${anio}.${extension}`;
+    }
 
-        const showRuc = state.company.showRucFooter !== false;
-        el.pv_footerRucWrap.style.display = showRuc ? "inline-flex" : "none";
-        el.pv_footerRucWrap2.style.display = showRuc ? "inline-flex" : "none";
+    function imprimirPDF() {
+        const originalTitle = document.title;
+        document.title = obtenerNombreArchivo('pdf').replace('.pdf', ''); 
+        window.print();
+        document.title = originalTitle;
+    }
 
-        el.pv_detailSpecs.textContent = safeText(p2.detailSpecs);
-        el.pv_condsBody.innerHTML = (p2.conditions || []).map(cond=>`
-          <tr>
-            <td><b>${escapeHtml(safeText(cond.concepto))}</b></td>
-            <td>${escapeHtml(safeText(cond.detalle))}</td>
-          </tr>
-        `).join("") || `<tr><td colspan="2" class="muted">—</td></tr>`;
-
-        el.pv_acceptText.textContent = safeText(p2.acceptText);
-        el.pv_dni.textContent = safeText(p2.dni || "__________");
-        el.pv_signDate.textContent = safeText(p2.signDate || "__/__/20__");
-
-        const showWM = state.company.showWatermark === true;
-        el.pv_watermarkWrap.style.display = showWM ? "flex" : "none";
-        el.pv_watermarkImg.src = logoToUse;
-      }
-
-      function saveToStorage(){
-        try{
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-          setStatus("Guardado","ok");
-        }catch(e){
-          setStatus("Error al guardar","danger");
-          alert("No se pudo guardar. Si subiste un logo muy pesado, reduce el tamaño del logo e intenta otra vez.");
-        }
-      }
-
-      function loadFromStorage(){
-        try{
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return false;
-          const data = JSON.parse(raw);
-
-          state = deepClone(DEFAULTS);
-          state.company = Object.assign(state.company, data.company || {});
-          state.quote = Object.assign(state.quote, data.quote || {});
-          state.items = Array.isArray(data.items) ? data.items : deepClone(DEFAULTS.items);
-          state.page2 = Object.assign(state.page2, data.page2 || {});
-          state.page2.conditions = Array.isArray(state.page2.conditions) ? state.page2.conditions : deepClone(DEFAULTS.page2.conditions);
-
-          if (typeof state.company.showRucFooter !== "boolean") state.company.showRucFooter = true;
-          if (typeof state.company.showWatermark !== "boolean") state.company.showWatermark = true;
-
-          return true;
-        }catch(e){
-          return false;
-        }
-      }
-
-      function hydrateInputsFromState(){
-        el.companyName.value = state.company.name || "";
-        el.ruc.value = state.company.ruc || "";
-        el.address.value = state.company.address || "";
-        el.whatsapp.value = state.company.whatsapp || "";
-        el.phone.value = state.company.phone || "";
-        el.email.value = state.company.email || "";
-        el.showRucFooter.checked = state.company.showRucFooter !== false;
-        el.showWatermark.checked = state.company.showWatermark === true;
-
-        el.titleOverride.value = state.quote.titleOverride || "";
-        el.quoteNo.value = state.quote.no || "";
-        el.date.value = state.quote.date || todayISO();
-        el.client.value = state.quote.client || "";
-        el.project.value = state.quote.project || "";
-        el.summary.value = state.quote.summary || "";
-        el.discType.value = state.quote.discType || "PEN";
-        el.discValue.value = String(state.quote.discValue || 0);
-
-        el.detailSpecs.value = state.page2.detailSpecs || "";
-        el.acceptText.value = state.page2.acceptText || "";
-        el.signClient.value = state.page2.signClient || "";
-        el.signCompany.value = state.page2.signCompany || "";
-        el.dni.value = state.page2.dni || "";
-        el.signDate.value = state.page2.signDate || "";
-      }
-
-      function bindInputs(){
-        el.companyName.addEventListener("input", ()=>{ state.company.name = el.companyName.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.ruc.addEventListener("input", ()=>{ state.company.ruc = el.ruc.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.address.addEventListener("input", ()=>{ state.company.address = el.address.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.whatsapp.addEventListener("input", ()=>{ state.company.whatsapp = el.whatsapp.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.phone.addEventListener("input", ()=>{ state.company.phone = el.phone.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.email.addEventListener("input", ()=>{ state.company.email = el.email.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-
-        el.showRucFooter.addEventListener("change", ()=>{
-          state.company.showRucFooter = !!el.showRucFooter.checked;
-          renderPreview();
-          setStatus("Cambios sin guardar","danger");
+    function descargarImagen() {
+        if (!window.html2canvas) return alert("Necesitas internet.");
+        html2canvas(document.getElementById("boletaView"), { scale: 2 }).then(canvas => {
+            const link = document.createElement("a");
+            link.download = obtenerNombreArchivo('png');
+            link.href = canvas.toDataURL("image/png");
+            link.click();
         });
-        el.showWatermark.addEventListener("change", ()=>{
-          state.company.showWatermark = !!el.showWatermark.checked;
-          renderPreview();
-          setStatus("Cambios sin guardar","danger");
-        });
-
-        el.logo.addEventListener("change", async ()=>{
-          const file = el.logo.files?.[0];
-          if (!file) return;
-          if (!/image\/(png|jpeg)/.test(file.type)){
-            alert("Sube un PNG o JPG.");
-            el.logo.value = "";
-            return;
-          }
-          const r = new FileReader();
-          r.onload = ()=>{
-            state.company.logoDataUrl = r.result;
-            renderPreview();
-            setStatus("Logo cargado (sin guardar)","danger");
-          };
-          r.readAsDataURL(file);
-        });
-
-        el.titleOverride.addEventListener("input", ()=>{ state.quote.titleOverride = el.titleOverride.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.quoteNo.addEventListener("input", ()=>{ state.quote.no = el.quoteNo.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.date.addEventListener("input", ()=>{ state.quote.date = el.date.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.client.addEventListener("input", ()=>{ state.quote.client = el.client.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.project.addEventListener("input", ()=>{ state.quote.project = el.project.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.summary.addEventListener("input", ()=>{ state.quote.summary = el.summary.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.discType.addEventListener("change", ()=>{ state.quote.discType = el.discType.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.discValue.addEventListener("input", ()=>{ state.quote.discValue = parseFloat(el.discValue.value||"0")||0; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-
-        el.detailSpecs.addEventListener("input", ()=>{ state.page2.detailSpecs = el.detailSpecs.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.acceptText.addEventListener("input", ()=>{ state.page2.acceptText = el.acceptText.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.dni.addEventListener("input", ()=>{ state.page2.dni = el.dni.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-        el.signDate.addEventListener("input", ()=>{ state.page2.signDate = el.signDate.value; renderPreview(); setStatus("Cambios sin guardar","danger"); });
-
-        el.btnAddItem.addEventListener("click", ()=>{
-          state.items.push({ id: cryptoId(), include:true, ambiente:"", producto:"", descripcion:"", especificaciones:"", precio:0 });
-          renderItemsEditor(); renderPreview();
-          setStatus("Ítem agregado (sin guardar)","danger");
-        });
-
-        el.btnAddCond.addEventListener("click", ()=>{
-          state.page2.conditions.push({ id: cryptoId(), concepto:"", detalle:"" });
-          renderCondsEditor(); renderPreview();
-          setStatus("Condición agregada (sin guardar)","danger");
-        });
-
-        el.btnSave.addEventListener("click", saveToStorage);
-
-        el.btnReset.addEventListener("click", ()=>{
-          if (!confirm("¿Seguro? Se borrará lo guardado y se cargará el ejemplo por defecto.")) return;
-          localStorage.removeItem(STORAGE_KEY);
-          state = deepClone(DEFAULTS);
-          hydrateInputsFromState();
-          renderItemsEditor();
-          renderCondsEditor();
-          renderPreview();
-          setStatus("Reseteado","ok");
-        });
-
-        el.btnPDF.addEventListener("click", ()=>{
-          setStatus("Abriendo impresión…","ok");
-          setTimeout(()=>window.print(), 120);
-        });
-
-        el.zoomRange.addEventListener("input", ()=>{
-          const z = parseFloat(el.zoomRange.value);
-          document.documentElement.style.setProperty("--doc-scale", String(z));
-          el.zoomLabel.textContent = Math.round(z*100)+"%";
-        });
-      }
-
-      function init(){
-        const loaded = loadFromStorage();
-        hydrateInputsFromState();
-        renderItemsEditor();
-        renderCondsEditor();
-        renderPreview();
-
-        document.documentElement.style.setProperty("--doc-scale", el.zoomRange.value);
-        el.zoomLabel.textContent = Math.round(parseFloat(el.zoomRange.value)*100) + "%";
-
-        bindInputs();
-        setStatus(loaded ? "Cargado desde guardado" : "Listo", "ok");
-      }
-
-      init();
-    })();
-  </script>
+    }
+</script>
 </body>
 </html>
