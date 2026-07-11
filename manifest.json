@@ -2,7 +2,7 @@
   "name": "Dazoru Projects - Sistema Cotizacion Pro",
   "short_name": "Dazoru",
   "description": "Sistema de cotizaciones para Dazoru Projects",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
