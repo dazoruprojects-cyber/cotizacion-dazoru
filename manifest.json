@@ -1,21 +1,25 @@
 {
-  "name": "Dazoru Projects Pro",
+  "name": "Dazoru Projects - Sistema Cotizacion Pro",
   "short_name": "Dazoru",
-  "description": "Sistema de cotizaciones y boletas",
+  "description": "Sistema de cotizaciones para Dazoru Projects",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "logo-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "logo.png",
+      "src": "logo-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
