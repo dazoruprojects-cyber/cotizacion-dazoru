@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dazoru Projects - Workspace Pro</title>
+    <title>Dazoru Projects - Sistema Cotizacion Pro</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a" id="metaTheme">
@@ -335,9 +335,9 @@
                 <label>Opacidad Marca de Agua Documento:</label><input type="range" id="opacityRange" min="0" max="0.5" step="0.05" value="0.1" oninput="updateOpacity(this.value)" style="width:100%;">
 
                 <div class="section-title">💳 Logos de Pago (Pie de Cotización)</div>
-                <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Sube una imagen con los logos o QRs. Si no subes nada, se usarán los botones por defecto.</p>
+                <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Sube una imagen con los logos o QRs. Si no subes nada, se usará la imagen por defecto del proyecto.</p>
                 <input type="file" id="payLogoInput" accept="image/*" onchange="handlePayLogo(event)" style="background:var(--input-bg); color:var(--text-main); padding:10px; border-radius:10px; width:100%; margin-bottom:10px;">
-                <button class="btn btn-secondary" onclick="removePayLogo()" style="padding: 10px; font-size: 13px;">🗑️ Quitar imagen y usar defecto</button>
+                <button class="btn btn-secondary" onclick="removePayLogo()" style="padding: 10px; font-size: 13px;">🗑️ Quitar imagen y usar la de por defecto</button>
             </div>
             
             <div>
@@ -499,9 +499,25 @@
             document.getElementById('bolLogo').src = savedLogo; document.getElementById('bolLogo').style.display = 'block'; document.getElementById('bolWatermark').style.backgroundImage = `url(${savedLogo})`;
         }
         
+        // ===== LOGOS DE PAGO: prioridad -> imagen subida manualmente (localStorage) -> imagen fija del proyecto (pay-logos.png) -> badges por defecto =====
         const savedPayLogo = localStorage.getItem('d_pay_logo');
+        const bolPayLogoEl = document.getElementById('bolPayLogo');
+        const defaultPayLogosEl = document.getElementById('defaultPayLogos');
+
         if(savedPayLogo) {
-            document.getElementById('bolPayLogo').src = savedPayLogo; document.getElementById('bolPayLogo').style.display = 'block'; document.getElementById('defaultPayLogos').style.display = 'none';
+            bolPayLogoEl.src = savedPayLogo;
+            bolPayLogoEl.style.display = 'block';
+            defaultPayLogosEl.style.display = 'none';
+        } else {
+            // Si no hay una imagen subida manualmente en este dispositivo, se usa la imagen fija
+            // incluida en el proyecto (pay-logos.png), igual en todos los dispositivos.
+            bolPayLogoEl.onerror = function() {
+                this.style.display = 'none';
+                defaultPayLogosEl.style.display = 'flex';
+            };
+            bolPayLogoEl.src = 'pay-logos.png';
+            bolPayLogoEl.style.display = 'block';
+            defaultPayLogosEl.style.display = 'none';
         }
 
         updateOpacity(localStorage.getItem('d_op') || 0.1);
@@ -534,8 +550,16 @@
 
     function removePayLogo() {
         localStorage.removeItem('d_pay_logo');
-        document.getElementById('bolPayLogo').src = ""; document.getElementById('bolPayLogo').style.display = 'none';
-        document.getElementById('defaultPayLogos').style.display = 'flex'; document.getElementById('payLogoInput').value = "";
+        const bolPayLogoEl = document.getElementById('bolPayLogo');
+        const defaultPayLogosEl = document.getElementById('defaultPayLogos');
+        bolPayLogoEl.onerror = function() {
+            this.style.display = 'none';
+            defaultPayLogosEl.style.display = 'flex';
+        };
+        bolPayLogoEl.src = 'pay-logos.png';
+        bolPayLogoEl.style.display = 'block';
+        defaultPayLogosEl.style.display = 'none';
+        document.getElementById('payLogoInput').value = "";
     }
 
     function switchTipo(val) {
